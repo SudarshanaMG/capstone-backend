@@ -1,12 +1,35 @@
 const contractor = require('../model/contractorSchema');
 // const Input = require('../models/Input');
 const axios = require('axios');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
 // Get all contractors
 exports.getAllContractors = async (req, res) => {
   try {
     const contractors = await contractor.find();
     res.json(contractors);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+exports.login = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    const user = await contractor.findOne({ email });
+    if (!user) return res.status(400).json({ message: 'Invalid credentials' });
+
+    if (password !== user.password) {
+      return res.status(400).json({ message: 'Invalid credentials' });
+    }
+    
+    const token = jwt.sign({ id: user._id, email: user.email, name:user.name}, process.env.JWT_SECRET, {
+      expiresIn: '1d',
+    });
+
+    res.json({ token, role: user.role });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -129,3 +152,31 @@ exports.findContractorIdBySpecialization = async (req, res) => {
       }
   };
 
+  exports.updateContractor = async (req, res) => {
+    try {
+      const updatedContractor = await contractor.findByIdAndUpdate(
+        req.params.id,
+        req.body,
+        { new: true, runValidators: true }
+      );
+      if (!updatedContractor) {
+        return res.status(404).json({ message: 'Contractor not found' });
+      }
+      res.status(200).json(updatedContractor);
+    } catch (err) {
+      res.status(500).json({ message: err.message });
+    }
+  };
+  
+  // Delete contractor
+  exports.deleteContractor = async (req, res) => {
+    try {
+      const deleted = await Contractor.findByIdAndDelete(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ message: 'Contractor not found' });
+      }
+      res.status(200).json({ message: 'Contractor deleted successfully' });
+    } catch (err) {
+      res.status(500).json({ message: err.message });
+    }
+  };

@@ -16,14 +16,51 @@ exports.getAllInputs = async (req, res) => {
 
 exports.createInput = async (req, res) => {
   try {
+    const response = await axios.get(`http://localhost:3001/api/users/phoneNumber`, {
+      headers: {
+        Authorization: req.headers.authorization // forward the JWT if needed
+      }
+    });
+    // console.log(response);
     const input = new Input({
         ...req.body,
+        phoneNumber: response.data,
         userEmail : req.user.email,
         userName : req.user.name
     });
 
     const saved = await input.save();
     res.status(201).json(saved);
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+};
+
+exports.updateInput = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Fetch latest phoneNumber using auth token
+    const response = await axios.get(`http://localhost:3001/api/users/phoneNumber`, {
+      headers: {
+        Authorization: req.headers.authorization
+      }
+    });
+
+    const updatedData = {
+      ...req.body,
+      phoneNumber: response.data,
+      userEmail: req.user.email,
+      userName: req.user.name
+    };
+
+    const updatedInput = await Input.findByIdAndUpdate(id, updatedData, { new: true });
+
+    if (!updatedInput) {
+      return res.status(404).json({ message: 'Estimation input not found' });
+    }
+
+    res.status(200).json(updatedInput);
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
@@ -41,7 +78,7 @@ exports.getInputById = async (req, res) => {
 
 exports.getInputByUserName = async (req, res) => {
   try {
-    const input = await Input.find({userName: req.user.name});
+    const input = await Input.find({userEmail: req.user.email});
     if (!input) return res.status(404).json({ message: 'Input not found' });
     res.json(input);
   } catch (err) {
@@ -59,6 +96,45 @@ exports.setContractorId = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
+// exports.setEstimationDone = async (req, res) => {
+//   try {
+//     await Input.findByIdAndUpdate(req.params.id, {
+//       done: true
+//     });
+//     res.sendStatus(200);
+//   } catch (err) {
+//     res.status(500).json({ message: err.message });
+//   }
+// };
+
+exports.setEstimationDone = async (req, res) => {
+  try {
+    const { totalCost } = req.body;
+
+    if (typeof totalCost === null) {
+      return res.status(400).json({ message: 'totalCost must be a number' });
+    }
+
+    const updatedInput = await Input.findByIdAndUpdate(
+      req.params.id,
+      {
+        done: true,
+        totalCost: totalCost
+      },
+      { new: true } // Return the updated document
+    );
+
+    if (!updatedInput) {
+      return res.status(404).json({ message: 'Input not found' });
+    }
+
+    res.status(200).json({ message: 'Estimation marked as done', input: updatedInput });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
 const CONTRACTOR_SERVICE_URL = process.env.CONTRACTOR_SERVICE_URL || 'http://localhost:3003/api/contractor';
 
 exports.assignContractor = async (req, res) => {

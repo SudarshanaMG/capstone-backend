@@ -118,7 +118,7 @@ const costDistribution = {
   
     LegalApproval: 0.01
   },
-  HouseRenovation: {
+  Renovation: {
     Demolition: 0.05,
     CivilWorks: 0.10,
     ModularElectricalWiring: 0.06,

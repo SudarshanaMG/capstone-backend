@@ -3,7 +3,7 @@ const projectMaterialMap = {
       useAllFromCategory: true  // use all materials from `categorizedMaterials`
     },
   
-    HouseRenovation: {
+    Renovation: {
       Civil: ['Demolition', 'CivilWorks'],
       Electrical: ['ModularElectricalWiring', 'FlexibleWires', 'ModularSwitches'],
       Plumbing: ['CPVCPipes', 'WesternWC', 'WashBasin'],

@@ -1,0 +1,51 @@
+services:
+  service1:
+    build: ./user-service
+    ports:
+      - "3001:3001"
+    networks:
+      - app-network
+    env_file:
+      - ./user-service/.env
+
+
+  service2:
+    build: ./user-inputs
+    ports:
+      - "3002:3002"
+    networks:
+      - app-network
+    env_file:
+      - ./user-inputs/.env
+
+  service3:
+    build: ./contractor-service
+    ports:
+      - "3003:3003"
+    networks:
+      - app-network
+    env_file:
+      - ./contractor-service/.env
+
+  service4:
+    build: ./estimation-service
+    ports:
+      - "3004:3004"
+    networks:
+      - app-network
+    env_file:
+      - ./estimation-service/.env
+
+  service5:
+    build: ./material-service
+    ports:
+      - "3005:3005"
+    networks:
+      - app-network
+    env_file:
+      - ./material-service/.env
+
+
+networks:
+  app-network:
+    driver: bridge

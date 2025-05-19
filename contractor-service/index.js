@@ -2,10 +2,11 @@ require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const contractorRoutes = require('./routes/contractorRoute');
+const cors = require('cors');
 
 const app = express();
 app.use(express.json());
-
+app.use(cors());
 const clientOptions = { serverApi: { version: '1', strict: true, deprecationErrors: true } };
 const dbconnect = async () => {
   try {

@@ -14,6 +14,8 @@ const UserSchema = new mongoose.Schema({
   role: { type: String, enum: ['admin', 'homeowner'], required: true, default: 'homeowner' },
   contactNumber: String,
   address: AddressSchema,
+  resetToken: String,
+  resetTokenExpiry: Date,
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', UserSchema);

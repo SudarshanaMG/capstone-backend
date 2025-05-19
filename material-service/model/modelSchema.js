@@ -12,7 +12,7 @@ const mongoose = require('mongoose');
 
 const MaterialSchema = new mongoose.Schema({
 
-  materialId: { type: String, required: true },
+  // materialId: { type: String, required: true },
   inputId: String,
   resourceName: String,
   resourceQuantity: Number,

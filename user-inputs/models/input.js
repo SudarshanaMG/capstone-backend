@@ -13,7 +13,10 @@ const InputSchema = new mongoose.Schema({
   propertyName: { type: String },
   landclearence: { type: Boolean },
   materialQuality: { type: String },
-  contractorId: { type: String } 
+  contractorId: { type: String },
+  contractorName: { type: String },
+  done: {type: Boolean, default: false},
+  totalCost: Number
 }, { timestamps: true });
 
 module.exports = mongoose.model('Input', InputSchema);

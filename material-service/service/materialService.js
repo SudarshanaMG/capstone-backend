@@ -38,8 +38,8 @@ const adjustCostForQuality = (cost, quality) => {
   }
 };
 
-const createMaterial = (materialId, inputId, resourceName, cost, quality) => {
-  const adjustedCost = adjustCostForQuality(cost, quality).toFixed(2);
+const createMaterial = ( inputId, resourceName, cost, quality) => {
+  const adjustedCost = adjustCostForQuality(cost, quality).toFixed(0);
   const unitPrice = MATERIAL_UNIT_PRICES[resourceName] || 0;
   const isLumpSum = [
     'MiscellaneousFittings',
@@ -55,11 +55,11 @@ const createMaterial = (materialId, inputId, resourceName, cost, quality) => {
 
   const resourceQuantity = (!unitPrice || isLumpSum)
   ? null
-  : (adjustedCost / unitPrice).toFixed(2);
+  : (adjustedCost / unitPrice).toFixed(0);
 
 
   return new MaterialEstimator({
-    materialId,
+    // materialId,
     inputId,
     resourceName,
     resourceQuantity,
@@ -72,7 +72,7 @@ const fetchTotalCostFromCostEstimator = async (req, inputId) => {
   try {
     // console.log(req.header('Authorization'));
     // console.log(inputId);
-    const response = await axios.post(`http://localhost:3004/api/estimation/calculate/${inputId}`,{},{
+    const response = await axios.post(`http://service4:3004/api/estimation/calculate/${inputId}`,{},{
     headers: {
       Authorization: req.header('Authorization'), // Forward token
     },
@@ -85,7 +85,7 @@ const fetchTotalCostFromCostEstimator = async (req, inputId) => {
   if (totalCost == null) throw new Error('Failed to fetch total cost');
   return totalCost;
 }catch (error) {
-    console.error('Error fetching total cost:', error);
+    console.error('Error fetching total cost:', error.message);
     throw error;
   }
 };
@@ -94,7 +94,7 @@ const fetchConstructionType = async (req, inputId) => {
   try {
     // console.log(req.header('Authorization'));
     // console.log(inputId);
-    const response = await axios.get(`http://localhost:3002/api/input/getid/${inputId}`,{
+    const response = await axios.get(`http://service2:3002/api/input/getid/${inputId}`,{
             headers: {
                   Authorization: req.header('Authorization'), // Forward token
                 },
@@ -113,16 +113,25 @@ const fetchConstructionType = async (req, inputId) => {
   }
 };
 
-exports.calculateMaterialCost = async (req, inputId, quality, materialId) => {
+exports.calculateMaterialCost = async (req, inputId, quality) => {
   const totalCost = await fetchTotalCostFromCostEstimator(req, inputId);
+  // console.log(totalCost);
   const constructionType = await fetchConstructionType(req, inputId);
   // console.log(constructionType);
+  const responseDone = await axios.post(`http://service2:3002/api/input/${inputId}/set-estimation-done`,{
+    totalCost: totalCost // Send the total cost
+  },{
+    headers: {
+      Authorization: req.header('Authorization'), // Forward token
+    },
+  });
+  // console.log(responseDone);
   const selectedMaterials = getMaterialsForProject(constructionType);
 
   const materials = Object.entries(costDistribution[constructionType])
     .filter(([name]) => selectedMaterials.includes(name))
     .map(([name, pct]) =>
-      createMaterial(materialId, inputId, name, totalCost * pct, quality)
+      createMaterial( inputId, name, totalCost * pct, quality)
     );
 
   await MaterialEstimator.insertMany(materials);
@@ -139,13 +148,14 @@ exports.calculateMaterialCost = async (req, inputId, quality, materialId) => {
       unitPrice: MATERIAL_UNIT_PRICES[m.resourceName] || 0
     }))
   };
+  // console.log(saveData);
 
   await MaterialEstimateResult.findOneAndUpdate(
     { inputId },
     saveData,
     { upsert: true, new: true }
   );
-  return materials;
+  return {materials, totalCost};
 };
 
 exports.getEstimateByInputId = async (inputId) => {

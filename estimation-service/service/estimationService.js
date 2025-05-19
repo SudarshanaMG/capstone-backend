@@ -57,12 +57,12 @@ async function fetchInputDetails(req) {
   try {
     // console.log(req.header('Authorization'));
     // console.log(req.params.inputId);
-    const response = await axios.get(`http://localhost:3002/api/input/getid/${req.params.inputId}`,{
+    const response = await axios.get(`http://service2:3002/api/input/getid/${req.params.inputId}`,{
         headers: {
               Authorization: req.header('Authorization'), // Forward token
             },
     });
-    console.log(response.data);
+    // console.log(response.data);
     return response.data;
   } catch (error) {
     console.error('Error fetching input details:', error.message);
