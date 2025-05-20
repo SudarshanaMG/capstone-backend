@@ -16,7 +16,7 @@ exports.getAllInputs = async (req, res) => {
 
 exports.createInput = async (req, res) => {
   try {
-    const response = await axios.get(`http://localhost:3001/api/users/phoneNumber`, {
+    const response = await axios.get(`http://service1:3001/api/users/phoneNumber`, {
       headers: {
         Authorization: req.headers.authorization // forward the JWT if needed
       }
@@ -41,7 +41,7 @@ exports.updateInput = async (req, res) => {
     const { id } = req.params;
 
     // Fetch latest phoneNumber using auth token
-    const response = await axios.get(`http://localhost:3001/api/users/phoneNumber`, {
+    const response = await axios.get(`http://service1:3001/api/users/phoneNumber`, {
       headers: {
         Authorization: req.headers.authorization
       }
@@ -79,6 +79,16 @@ exports.getInputById = async (req, res) => {
 exports.getInputByUserName = async (req, res) => {
   try {
     const input = await Input.find({userEmail: req.user.email});
+    if (!input) return res.status(404).json({ message: 'Input not found' });
+    res.json(input);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+exports.getInputByEmail = async (req, res) => {
+  try {
+    const input = await Input.find({userEmail: req.query.email});
     if (!input) return res.status(404).json({ message: 'Input not found' });
     res.json(input);
   } catch (err) {
@@ -135,7 +145,7 @@ exports.setEstimationDone = async (req, res) => {
   }
 };
 
-const CONTRACTOR_SERVICE_URL = process.env.CONTRACTOR_SERVICE_URL || 'http://localhost:3003/api/contractor';
+const CONTRACTOR_SERVICE_URL = process.env.CONTRACTOR_SERVICE_URL || 'http://service3:3003/api/contractor';
 
 exports.assignContractor = async (req, res) => {
   try {
